@@ -1,0 +1,56 @@
+---
+# tasks file for init
+
+- name: edit selinux config file 
+  selinux:
+   policy: targeted
+   state: permissive
+
+- name: disable swap
+  lineinfile:
+   dest: /etc/fstab
+   regexp: ".*swap.*"
+   line: ""
+- name: disable swap selinux
+  shell: 
+   cmd: swapoff -a ; setenforce 0
+
+- name: disable firewalld
+  service:
+   name: firewalld
+   state: stopped
+   enabled: no
+  ignore_errors: yes
+
+- name: set dns
+  lineinfile:
+   path: /etc/resolv.conf
+   regexp: "^nameserver.*"
+   line: "nameserver 223.5.5.5"
+
+- name: set iptables modules
+  copy: src=k8s.conf dest=/etc/modules-load.d/
+
+- name: set sysctl
+  copy: src=k8s-sysctl.conf dest=/etc/sysctl.d/
+
+- name: apply sysctl
+  shell: modprobe overlay ; modprobe br_netfilter ; sysctl --system
+
+- name: install yum-utils
+  yum:
+   name: yum-utils
+
+- name: add docker k8s repo
+  shell: |
+       yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo 
+       cat > /etc/yum.repos.d/kubernetes.repo << EOF
+       [kubernetes]
+       name=Kubernetes
+       baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+       enabled=1
+       gpgcheck=0
+       repo_gpgcheck=0
+       gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+       EOF
+

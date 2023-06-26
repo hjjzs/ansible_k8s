@@ -1,0 +1,12 @@
+---
+# tasks file for hostname
+- name: set hostname
+  hostname:
+   name: "{{ node_name }}"
+
+- name: set hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: "{{item['value']}} {{item['key']}}"
+  with_dict:
+  - "{{ hosts_node }}"

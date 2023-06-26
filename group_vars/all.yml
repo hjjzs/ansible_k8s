@@ -1,0 +1,8 @@
+hosts_node:
+ master: 10.255.9.89
+ node1: 10.255.9.88
+ node2: 10.255.9.87
+
+imageRepo: registry.aliyuncs.com/google_containers
+serviceSubnet: 10.96.0.0/12
+podSubnet: 10.244.0.0/16

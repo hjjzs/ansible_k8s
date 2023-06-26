@@ -1,0 +1,6 @@
+---
+# tasks file for node
+- name: join k8s
+  shell: "{{ hostvars[hosts_node.master]['join_cmd']['stdout'] }}"
+
+

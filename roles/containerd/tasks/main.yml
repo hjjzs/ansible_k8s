@@ -1,0 +1,60 @@
+---
+# tasks file for containerd
+
+- name: install docker
+  yum:
+   name: docker-ce
+- name: edit docker
+  shell: |
+    mkdir -p /etc/docker
+    cat > /etc/docker/daemon.json  << EOF
+    {
+    "registry-mirrors": ["https://r3ucysd2.mirror.aliyuncs.com"],
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "storage-driver": "overlay2"
+    }
+    EOF
+- name: edit containerd
+  shell: |
+   containerd config default > /etc/containerd/config.toml
+   sed -i "s#SystemdCgroup\ \=\ false#SystemdCgroup\ \=\ true#g" /etc/containerd/config.toml
+   sed -i "s#registry.k8s.io/pause:3.6#registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.7#g" /etc/containerd/config.toml
+- name: start docker and containerd
+  service:
+   name: "{{item}}"
+   state: started
+   enabled: yes
+  with_items:
+  - docker
+  - containerd
+- name: install k8s packages
+  yum:
+   name: "{{item}}"
+  with_items:
+  - kubelet-1.25.3 
+  - kubeadm-1.25.3 
+  - kubectl-1.25.3
+  - ipset 
+  - ipvsadm
+
+- name: set ipvs
+  copy:
+   src: ipvs.modules
+   dest: /etc/sysconfig/modules/
+- name: run ipvs script
+  shell: /bin/bash /etc/sysconfig/modules/ipvs.modules
+
+- name: set kubelet apply ipvs
+  shell: |
+   cat > /etc/sysconfig/kubelet << EOF
+   KUBELET_EXTRA_ARGS="--cgroup-driver=systemd"
+   KUBE_PROXY_MODE="ipvs"
+   EOF
+- name: enable kubelet
+  service:
+   name: kubelet
+   enabled: yes
+
+  
+
+

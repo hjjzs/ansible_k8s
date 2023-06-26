@@ -1,0 +1,10 @@
+[master]
+10.255.9.89 ansible_ssh_pass='Abc@123' ansible_ssh_user="root" node_name="master"
+
+[node]
+10.255.9.88 ansible_ssh_pass='Abc@123' ansible_ssh_user="root" node_name="node1"
+10.255.9.87 ansible_ssh_pass='Abc@123' ansible_ssh_user="root" node_name="node2"
+
+[k8s:children]
+master
+node

@@ -1,0 +1,29 @@
+---
+# tasks file for master
+
+- name: copy kubeadm config
+  template:
+   src: kubeadm.yaml
+   dest: /opt/
+
+- name: check port
+  stat:
+    path: /root/.kube/config
+  register: k8s_status
+  
+
+- name: install master
+  shell: kubeadm init --config /opt/kubeadm.yaml
+  when: k8s_status.stat.exists == False
+
+- name: set config
+  shell: mkdir /root/.kube/ ; cp -r /etc/kubernetes/admin.conf /root/.kube/config
+
+- name: create join command
+  shell: kubeadm token create --print-join-command
+  register: join_cmd
+- name: set fact
+  set_fact: join_cmd={{ join_cmd }}
+- name: apply cni 
+  shell: kubectl apply -f  https://docs.tigera.io/archive/v3.25/manifests/calico.yaml
+
